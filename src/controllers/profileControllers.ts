@@ -93,7 +93,16 @@ const profileControllers = {
       });
 
       await appDetails.save();
-      res.status(200).json({ message: "Credentials added successfully" });
+      res.status(200).json({
+        message: "Credentials added successfully",
+        newData: {
+          id: appDetails._id,
+          name: appDetails.name,
+          url: appDetails.url,
+          userName: appDetails.userName,
+          password: decrypt(appDetails.password, appDetails.iv)
+        },
+      });
       return;
     } catch (error) {
       console.error(error);
@@ -118,7 +127,7 @@ const profileControllers = {
       const response = await SavedPassword.findByIdAndUpdate(
         id,
         updatedDetails,
-        { new: true }
+        { new: true },
       );
       res.status(200).json({
         message: "Updated Credentials",
@@ -135,7 +144,7 @@ const profileControllers = {
       console.error(error);
     }
   },
-  
+
   deletePasswords: async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
