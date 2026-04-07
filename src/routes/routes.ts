@@ -24,4 +24,7 @@ routes.post('/profile/managePasswords',validateJwt, profileControllers.addPasswo
 routes.patch('/profile/managePasswords/:id', validateJwt, profileControllers.updatePasswords);
 routes.delete('/profile/managePasswords/:id', validateJwt, profileControllers.deletePasswords);
 
+routes.post('/profile/importCSV', validateJwt, profileControllers.importCSV);
+routes.get('/profile/exportCSV', validateJwt, profileControllers.exportCSV);
+
 export default routes;

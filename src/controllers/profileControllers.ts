@@ -100,7 +100,7 @@ const profileControllers = {
           name: appDetails.name,
           url: appDetails.url,
           userName: appDetails.userName,
-          password: decrypt(appDetails.password, appDetails.iv)
+          password: decrypt(appDetails.password, appDetails.iv),
         },
       });
       return;
@@ -149,12 +149,53 @@ const profileControllers = {
     try {
       const { id } = req.params;
       await SavedPassword.findByIdAndDelete(id);
-      res.status(200).json({ message: "Deleted Credentials" });
+      res.status(200).json({ message: "Credential deleted successfully" });
       return;
     } catch (error) {
       console.log(error);
     }
   },
+
+  importCSV: async (req: AuthRequest, res: Response) => {
+    try {
+      const user = req.user;
+      const userId = await User.findOne({ email: user?.email });
+      const savedEntries = [];
+      let skipped = 0;
+      const { csvData } = req.body;
+      for (const entry of csvData) {
+        if (!entry.name || !entry.url || !entry.username || !entry.password) {
+          skipped++;
+          continue;
+        }
+        const { iv, encryptedData } = encrypt(entry.password);
+        const appDetails = new SavedPassword({
+          user: userId,
+          name: entry.name,
+          url: entry.url,
+          userName: entry.username,
+          iv,
+          password: encryptedData,
+        });
+        await appDetails.save();
+        savedEntries.push({
+          id: appDetails._id,
+          name: appDetails.name,
+          url: appDetails.url,
+          userName: appDetails.userName,
+          password: decrypt(appDetails.password, appDetails.iv),
+        });
+      }
+      res.status(200).json({
+        message: `${savedEntries.length} imported successfully${skipped > 0 ? `, ${skipped} skipped due to missing name, url, username or password` : ""}`,
+        newData: savedEntries,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  exportCSV: async (req: AuthRequest, res: Response) => {},
 };
 
 export default profileControllers;
