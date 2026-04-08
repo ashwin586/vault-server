@@ -1,12 +1,10 @@
-import { Request, Response } from "express";
-import bcrypt from "bcrypt";
+import { Response } from "express";
 import User from "../models/users";
 import SavedPassword from "../models/savedPasswords";
 import { decrypt, encrypt } from "../utils/crypto";
-import { userPasswordsInterface, AuthRequest } from "../types/interface";
+import { AuthRequest } from "../types/interface";
 
 const profileControllers = {
-  // ** Manage User Details Controllers
   fetchProfile: async (req: AuthRequest, res: Response) => {
     try {
       const userInfo = req.user;
@@ -19,43 +17,42 @@ const profileControllers = {
       res.status(200).json({ user: userDetails });
       return;
     } catch (error: unknown) {
-      console.error("profile error", error);
+      console.error("Fetch Profile Error", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   },
+  // updateProfile: async (req: AuthRequest, res: Response) => {
+  //   try {
+  //     const userInfo = req.user;
+  //     const user = await User.findOne({ email: userInfo?.email });
+  //     if (!user) {
+  //       res.status(404).json({ message: "User not found" });
+  //       return;
+  //     }
+  //     if (req.body.name !== undefined) user.name = req.body.name;
 
-  updateProfile: async (req: AuthRequest, res: Response) => {
-    try {
-      const userInfo = req.user;
-      const user = await User.findOne({ email: userInfo?.email });
-      if (!user) {
-        res.status(404).json({ message: "User not found" });
-        return;
-      }
-      if (req.body.name !== undefined) user.name = req.body.name;
+  //     const { currentPassword, newPassword } = req.body;
+  //     if (currentPassword && newPassword) {
+  //       const isMatch = await bcrypt.compare(currentPassword, user?.password!);
+  //       if (!isMatch) {
+  //         res
+  //           .status(400)
+  //           .json({ message: "Incorrect current password, Try again" });
+  //         return;
+  //       }
+  //       user.password = await bcrypt.hash(newPassword, 10);
+  //     }
 
-      const { currentPassword, newPassword } = req.body;
-      if (currentPassword && newPassword) {
-        const isMatch = await bcrypt.compare(currentPassword, user?.password!);
-        if (!isMatch) {
-          res
-            .status(400)
-            .json({ message: "Incorrect current password, Try again" });
-          return;
-        }
-        user.password = await bcrypt.hash(newPassword, 10);
-      }
+  //     await user.save();
+  //     res.json({ message: "Profile updated successfully" });
+  //     return;
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).json({ message: "Something went wrong" });
+  //     return;
+  //   }
+  // },
 
-      await user.save();
-      res.json({ message: "Profile updated successfully" });
-      return;
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Something went wrong" });
-      return;
-    }
-  },
-
-  // * * Manage Password controllers
   fetchPasswords: async (req: AuthRequest, res: Response) => {
     try {
       const user = req.user;
@@ -71,7 +68,7 @@ const profileControllers = {
       res.status(200).json({ passwords: userCredentials });
       return;
     } catch (error) {
-      console.error(error);
+      console.error("Fetch Password Error", error);
       res.status(500).json({ message: "Something went wrong" });
     }
   },
@@ -93,7 +90,7 @@ const profileControllers = {
       });
 
       await appDetails.save();
-      res.status(200).json({
+      res.status(201).json({
         message: "Credentials added successfully",
         newData: {
           id: appDetails._id,
@@ -105,7 +102,8 @@ const profileControllers = {
       });
       return;
     } catch (error) {
-      console.error(error);
+      console.error("Add password error", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   },
 
@@ -141,7 +139,8 @@ const profileControllers = {
       });
       return;
     } catch (error) {
-      console.error(error);
+      console.error("Update password error", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   },
 
@@ -152,7 +151,8 @@ const profileControllers = {
       res.status(200).json({ message: "Credential deleted successfully" });
       return;
     } catch (error) {
-      console.log(error);
+      console.error("Delete password error", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   },
 
@@ -165,6 +165,15 @@ const profileControllers = {
       const { csvData } = req.body;
       for (const entry of csvData) {
         if (!entry.name || !entry.url || !entry.username || !entry.password) {
+          skipped++;
+          continue;
+        }
+        const existing = await SavedPassword.findOne({
+          user: userId,
+          url: entry.url,
+          userName: entry.username,
+        });
+        if (existing) {
           skipped++;
           continue;
         }
@@ -187,15 +196,14 @@ const profileControllers = {
         });
       }
       res.status(200).json({
-        message: `${savedEntries.length} imported successfully${skipped > 0 ? `, ${skipped} skipped due to missing name, url, username or password` : ""}`,
+        message: `${savedEntries.length} imported successfully${skipped > 0 ? `, ${skipped} skipped (duplicates or missing fields)` : ""}`,
         newData: savedEntries,
       });
     } catch (error) {
-      console.error(error);
+      console.error("Import CSV error", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
   },
-
-  exportCSV: async (req: AuthRequest, res: Response) => {},
 };
 
 export default profileControllers;

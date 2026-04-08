@@ -7,7 +7,7 @@ import { userInterface, authInterface } from "../types/interface";
 const authControllers = {
   login: async (
     req: Request<{}, {}, authInterface>,
-    res: Response
+    res: Response,
   ): Promise<void> => {
     const { email, password } = req.body;
     try {
@@ -22,7 +22,7 @@ const authControllers = {
 
       const isCredentials = await bcrypt.compare(
         password,
-        existingUser?.password
+        existingUser?.password,
       );
       if (!isCredentials) {
         res.status(401).json({ message: "Incorrect email or password." });
@@ -36,25 +36,19 @@ const authControllers = {
       const accesToken = jwt.sign(payload, process.env.JWT_SECRET!, {
         expiresIn: "30m",
       });
-      const refreshToken = jwt.sign({ email }, process.env.JWT_REFRESH!, {
-        expiresIn: "1hr",
-      });
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 60 * 60 * 1000,
-      });
+
       res.status(200).json({ message: "Login Successful", token: accesToken });
       return;
     } catch (error) {
       console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+      return;
     }
   },
 
   register: async (
     req: Request<{}, {}, authInterface>,
-    res: Response
+    res: Response,
   ): Promise<void> => {
     const { email, password } = req.body;
     try {
@@ -81,34 +75,6 @@ const authControllers = {
       return;
     }
   },
-
-  googleSignIn: async (req: Request, res: Response) => {},
-
-  refreshToken: async (req: Request, res: Response) => {
-    try {
-      const refreshToken = req.cookies.refreshToken;
-      if (!refreshToken) {
-        res.status(401).json({ message: "Token Expired" });
-        return;
-      }
-      const payload = jwt.verify(
-        refreshToken,
-        process.env.JWT_REFRESH!
-      ) as jwt.JwtPayload;
-      const email = payload?.email;
-
-      const newAccessToken = jwt.sign({ email }, process.env.JWT_SECRET!, {
-        expiresIn: "1m",
-      });
-
-      res.status(200).json({ token: newAccessToken });
-      return;
-    } catch (error) {
-      console.error(error);
-      res.status(403).json({ message: "Invalid or expired refresh token" });
-      return;
-    }
-  }
 };
 
 export default authControllers;

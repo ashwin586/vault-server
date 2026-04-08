@@ -15,7 +15,7 @@ const validateJwt = async (req: AuthRequest, res: Response, next: NextFunction) 
     next();
   } catch (error: any) {
     if (error.name === "TokenExpiredError") {
-      res.status(401).json({ message: "Token Expired" });
+      res.status(401).json({ message: "Session Expired" });
       return;
     } else if (error.name === "JsonWebTokenError") {
       res.status(401).json({ message: "Invalid token" });
