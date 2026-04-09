@@ -1,14 +1,14 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import mongoDb from "./config/mongoDB";
 import routes from "./routes/routes";
 import corsOptions from "./config/cors";
 
 const app = express();
-
-dotenv.config({ path: "../.env" });
 
 mongoDb();
 
