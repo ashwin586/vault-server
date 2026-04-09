@@ -96,16 +96,33 @@ Server runs on [http://localhost:5000](http://localhost:5000).
 
 ```
 vault-server/
-├── controllers/      # Route handler logic
-│   ├── authControllers.ts
-│   └── profileControllers.ts
-├── middleware/       # JWT validation, input validation
-├── models/           # Mongoose schemas
-│   ├── users.ts
-│   └── savedPasswords.ts
-├── routes/           # Express route definitions
-├── types/            # TypeScript interfaces
-└── utils/            # Crypto helpers
+├── src/
+│   ├── config/               # Database and CORS configuration
+│   │   ├── cors.ts
+│   │   └── mongoDB.ts
+│   ├── controllers/          # Route handler logic
+│   │   ├── authControllers.ts
+│   │   └── profileControllers.ts
+│   ├── middleware/           # JWT validation, input validation
+│   │   ├── validateJWT.ts
+│   │   └── validateRequest.ts
+│   ├── models/               # Mongoose schemas
+│   │   ├── users.ts
+│   │   └── savedPasswords.ts
+│   ├── routes/               # Express route definitions
+│   │   └── routes.ts
+│   ├── types/                # TypeScript interfaces
+│   │   └── interface.ts
+│   ├── utils/                # Crypto helpers
+│   │   └── crypto.ts
+│   ├── validators/           # express-validator schemas
+│   │   └── validators.ts
+│   └── app.ts                # Entry point
+├── .env                      # Environment variables
+├── .env.example              # Environment variables template
+├── nodemon.json              # Nodemon configuration
+├── package.json
+└── tsconfig.json
 ```
 
 ## Related
